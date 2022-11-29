@@ -1,0 +1,112 @@
+on load:
+  #! Config
+  delete {pl-hide::*}
+
+  # ----- Per Group Commands -----
+  # This determines which commands will be visible to the player.
+  # If a player executes a command they can't see, it will be cancelled.
+  # The command must exist, or else it won't show
+  # !!!!! This only updates after the player rejoins !!!!!
+  # Format: show.commands::permission group::*
+  # Use "default" for player's with no group
+  # Examples: 
+  set {pl-hide::show.commands::default::*} to "help,spawn,tpa" split at ","
+  set {pl-hide::show.commands::test::*} to "demo,help" split at ","
+  set {pl-hide::show.commands::moderator::*} to "help,spawn,tpa,ban,kick,mute" split at ","
+
+  # The message that will be sent to player if they execute a command that doesn't exist or they can't see.
+  set {pl-hide::message} to "&cUnknown command! Type /help for a list of commands."
+
+  #! Groups here will be ignored by this script.
+  set {pl-hide::admin::*} to "owner", "admin" and "mod"
+
+  # ----- Cheater Handling -----
+  # What method should be used against cheaters?
+  # none: return no plugins to cheater
+  # punish: run a console command on cheater, use <player> for cheater's name
+  # fakelist: returns a fake list of plugins to the cheater
+  set {pl-hide::method} to "punish"
+  set {pl-hide::punish.command} to "ban <player> cheating."
+  set {pl-hide::fake.list::*} to "fake-plugin-1", "fake-plugin-2" and "fake-plugin-3"
+
+  #! Config ends here...
+
+import:
+  ch.njol.skript.Skript
+
+  java.lang.Override
+  java.util.ArrayList
+
+  org.bukkit.Bukkit
+  org.bukkit.plugin.Plugin
+  org.bukkit.event.player.PlayerCommandSendEvent
+
+  com.mojang.brigadier.suggestion.Suggestions
+  com.mojang.brigadier.suggestion.Suggestion
+  com.mojang.brigadier.context.StringRange
+
+  com.comphenix.protocol.events.PacketListener
+  com.comphenix.protocol.events.ListeningWhitelist
+  com.comphenix.protocol.events.ListenerPriority
+  com.comphenix.protocol.events.ListenerOptions
+  com.comphenix.protocol.events.PacketAdapter
+  com.comphenix.protocol.events.PacketEvent
+  com.comphenix.protocol.ProtocolLibrary
+  com.comphenix.protocol.PacketType
+  com.comphenix.protocol.injector.GamePhase
+
+preimport:
+  me.eren.packetapi.listeners.TabComplete
+
+public skript class me.eren.packetapi.listeners.TabComplete extends PacketAdapter:
+    
+  public TabComplete():
+    super[Plugin, ListenerPriority, PacketType[]](Skript.getInstance(), ListenerPriority.NORMAL, [PacketType.Play.Server.TAB_COMPLETE as PacketType])
+
+  @Override
+  public void onPacketSending(PacketEvent event):
+    stop trigger if {_event}.getPacketType() is not PacketType.Play.Server.TAB_COMPLETE
+    stop if {pl-hide::admin::*} contains ({_event}.getPlayer())'s group
+    set {_packet} to {_event}.getPacket().getSpecificModifier(Suggestions.class).read(0)
+    if {_packet}.getRange().getEnd() < 2:
+      if {pl-hide::method} is "none":
+        {_event}.setCancelled(true)
+
+      else if {pl-hide::method} is "punish":
+        {_event}.setCancelled(true)
+        set {_cmd} to {pl-hide::punish.command}
+        replace all "<player>" in {_cmd} with "%{_event}.getPlayer()%"
+        broadcast {_cmd}
+        execute console command {_cmd}
+
+      else if {pl-hide::method} is "fakelist":
+        set {_suggestionList} to new ArrayList()
+        loop {pl-hide::fake.list::*}:
+          {_suggestionList}.add(new Suggestion(StringRange.at(1), join loop-value, ":" and loop-value))
+        set {_event}.getPacket().getSpecificModifier(Suggestions.class).read(0).suggestions to {_suggestionList}
+
+on PlayerCommandSendEvent:
+  stop if player is op
+  stop if {pl-hide::admin::*} contains (event.getPlayer())'s group
+  set {_s::*} to ...event.getCommands().toArray()
+  loop {_s::*}:
+    event.getCommands().remove(loop-value) if {show.commands::%(event.getPlayer())'s group%::*} doesn't contain loop-value
+
+on command:
+  stop if executor is console
+  stop if {pl-hide::admin::*} contains player's group
+  stop if player is op
+  if {pl-hide::show.commands::%player's group%::*} doesn't contain command:
+    send {pl-hide::message} to player
+    cancel event
+
+on load:
+  set {protocolManager} to ProtocolLibrary.getProtocolManager()
+  set {TabComplete} to new TabComplete()
+  {protocolManager}.addPacketListener({TabComplete})
+
+on unload:
+  {protocolManager}.removePacketListener({TabComplete})
+  delete {TabComplete}
+
+# By eren. and pesekjan
