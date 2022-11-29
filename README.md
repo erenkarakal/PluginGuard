@@ -22,3 +22,6 @@ PluginGuard can detect cheaters who are trying to see your plugins. You can retu
 This check is 100% accurate.
 
 ![image](https://user-images.githubusercontent.com/67760502/204563763-a5e7efb8-7d6f-4549-b40b-24a978ad4f4b.png)
+
+## Support
+Join our [Discord](https://discord.gg/py3hrJJvfy) server here!
