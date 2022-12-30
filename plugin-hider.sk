@@ -86,11 +86,11 @@ public skript class me.eren.packetapi.listeners.TabComplete extends PacketAdapte
         set {_event}.getPacket().getSpecificModifier(Suggestions.class).read(0).suggestions to {_suggestionList}
 
 on PlayerCommandSendEvent:
-  stop if player is op
+  stop if event.getPlayer() is op
   stop if {pl-hide::admin::*} contains (event.getPlayer())'s group
   set {_s::*} to ...event.getCommands().toArray()
   loop {_s::*}:
-    event.getCommands().remove(loop-value) if {show.commands::%(event.getPlayer())'s group%::*} doesn't contain loop-value
+    event.getCommands().remove(loop-value) if {pl-hide::show.commands::%(event.getPlayer())'s group%::*} doesn't contain loop-value
 
 on command:
   stop if executor is console
