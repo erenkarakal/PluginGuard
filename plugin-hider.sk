@@ -74,8 +74,8 @@ public skript class me.eren.packetapi.listeners.TabComplete extends PacketAdapte
       set {_hacking} to true
              
     else:
+      set {_pl::*} to pg_get_plugins()
       loop ...{_packet}.getList():
-        set {_pl::*} to pg_get_plugins()
         if {_pl::*} doesn't contain loop-value.getText():
           stop  # not hacking
         else:
