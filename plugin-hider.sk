@@ -58,6 +58,7 @@ import:
 preimport:
   me.eren.packetapi.listeners.TabComplete
 
+
 public skript class me.eren.packetapi.listeners.TabComplete extends PacketAdapter:
     
   public TabComplete():
@@ -65,25 +66,36 @@ public skript class me.eren.packetapi.listeners.TabComplete extends PacketAdapte
 
   @Override
   public void onPacketSending(PacketEvent event):
-    stop trigger if {_event}.getPacketType() is not PacketType.Play.Server.TAB_COMPLETE
+    stop if {_event}.getPacketType() is not PacketType.Play.Server.TAB_COMPLETE
     stop if {pl-hide::admin::*} contains ({_event}.getPlayer())'s group
     set {_packet} to {_event}.getPacket().getSpecificModifier(Suggestions.class).read(0)
+             
     if {_packet}.getRange().getEnd() < 2:
-      if {pl-hide::method} is "none":
-        {_event}.setCancelled(true)
+      {_event}.setCancelled(true)
+             
+    loop ...{_packet}.getList():
+      set {_pl::*} to pg_get_plugins()
+      if {_pl::*} doesn't contain loop-value.getText():
+        stop
+      else:
+        set {_hacking} to true
+    
+    {_hacking} = true
+    if {pl-hide::method} is "none":
+      {_event}.setCancelled(true)
+             
+    else if {pl-hide::method} is "punish":
+      {_event}.setCancelled(true)
+      set {_cmd} to {pl-hide::punish.command}
+      replace all "<player>" in {_cmd} with "%{_event}.getPlayer()%"
+      broadcast {_cmd}
+      execute console command {_cmd}
 
-      else if {pl-hide::method} is "punish":
-        {_event}.setCancelled(true)
-        set {_cmd} to {pl-hide::punish.command}
-        replace all "<player>" in {_cmd} with "%{_event}.getPlayer()%"
-        broadcast {_cmd}
-        execute console command {_cmd}
-
-      else if {pl-hide::method} is "fakelist":
-        set {_suggestionList} to new ArrayList()
-        loop {pl-hide::fake.list::*}:
-          {_suggestionList}.add(new Suggestion(StringRange.at(1), join loop-value, ":" and loop-value))
-        set {_event}.getPacket().getSpecificModifier(Suggestions.class).read(0).suggestions to {_suggestionList}
+    else if {pl-hide::method} is "fakelist":
+      set {_suggestionList} to new ArrayList()
+      loop {pl-hide::fake.list::*}:
+        {_suggestionList}.add(new Suggestion(StringRange.at(1), join loop-value, ":" and loop-value))
+      set {_event}.getPacket().getSpecificModifier(Suggestions.class).read(0).suggestions to {_suggestionList}
 
 on PlayerCommandSendEvent:
   stop if event.getPlayer() is op
@@ -108,5 +120,10 @@ on load:
 on unload:
   {protocolManager}.removePacketListener({TabComplete})
   delete {TabComplete}
+
+function pg_get_plugins() :: strings:
+  loop ...Bukkit.getPluginManager().getPlugins():
+    add loop-value.getName() to {_pl::*}
+  return {_pl::*}
 
 # By eren. and pesekjan
