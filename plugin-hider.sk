@@ -71,14 +71,15 @@ public skript class me.eren.packetapi.listeners.TabComplete extends PacketAdapte
     set {_packet} to {_event}.getPacket().getSpecificModifier(Suggestions.class).read(0)
              
     if {_packet}.getRange().getEnd() < 2:
-      {_event}.setCancelled(true)
+      set {_hacking} to true
              
-    loop ...{_packet}.getList():
-      set {_pl::*} to pg_get_plugins()
-      if {_pl::*} doesn't contain loop-value.getText():
-        stop
-      else:
-        set {_hacking} to true
+    else:
+      loop ...{_packet}.getList():
+        set {_pl::*} to pg_get_plugins()
+        if {_pl::*} doesn't contain loop-value.getText():
+          stop  # not hacking
+        else:
+          set {_hacking} to true
     
     {_hacking} = true
     if {pl-hide::method} is "none":
