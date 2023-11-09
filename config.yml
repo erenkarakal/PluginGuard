@@ -1,0 +1,22 @@
+# ------- anticheat -------
+# none: show no plugins to cheater
+# command: run a console command on cheater
+# fakelist: returns a fake list of plugins to the cheater
+punish-method: command
+# command to run if method is 'command', use <player> for cheater's name
+command: kick <player> cheating.
+# message to send to player if they run a command they can't see or it doesn't exist.
+message: "&cUnknown Command!"
+
+# ------- tab completions -------
+# defines what commands each group can see, uses the group.x permission (ex. group.admin)
+# OP players will see every command no matter what
+# must rejoin to see the effects
+group:
+  admin:
+    - $default # this means all commands from 'default' will be included in 'admin'
+    - ban
+    - kick
+    - help
+  default:
+    - spawn
