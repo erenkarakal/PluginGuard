@@ -56,7 +56,7 @@ on player command send:
 
 on command:
   stop if executor is console
-  #stop if player has permission "pluginhider.bypass"
+  stop if player has permission "pluginhider.bypass"
 
   if {-pl-hide::group::%player's group%::*} doesn't contain command:
     send formatted {-pl-hide::message} to player
